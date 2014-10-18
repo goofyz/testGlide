@@ -1,20 +1,15 @@
 package com.example.testGlide;
 
-import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LevelListDrawable;
-import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 
 
-public class UrlDrawable extends Drawable {
-    public GlideDrawable drawable;
+public class UrlDrawable extends Drawable implements Drawable.Callback {
+    private GlideDrawable drawable;
 
     public UrlDrawable() {
         super();
@@ -25,6 +20,15 @@ public class UrlDrawable extends Drawable {
         if (drawable != null) {
             drawable.setAlpha(alpha);
         }
+    }
+
+    public void setDrawable(GlideDrawable drawable) {
+        if (this.drawable != null) {
+            this.drawable.setCallback(null);
+        }
+        drawable.setCallback(this);
+        this.drawable = drawable;
+
     }
 
     @Override
@@ -42,6 +46,7 @@ public class UrlDrawable extends Drawable {
         return 0;
     }
 
+
     @Override
     public void draw(Canvas canvas) {
 // override the draw to facilitate refresh function later
@@ -55,5 +60,29 @@ public class UrlDrawable extends Drawable {
                 drawable.start();
             }
         }
+    }
+
+    @Override
+    public void invalidateDrawable(Drawable drawable) {
+        if (getCallback() == null) {
+            return;
+        }
+        getCallback().invalidateDrawable(drawable);
+    }
+
+    @Override
+    public void scheduleDrawable(Drawable drawable, Runnable runnable, long l) {
+        if (getCallback() == null) {
+            return;
+        }
+        getCallback().scheduleDrawable(drawable, runnable, l);
+    }
+
+    @Override
+    public void unscheduleDrawable(Drawable drawable, Runnable runnable) {
+        if (getCallback() == null) {
+            return;
+        }
+        getCallback().unscheduleDrawable(drawable, runnable);
     }
 }

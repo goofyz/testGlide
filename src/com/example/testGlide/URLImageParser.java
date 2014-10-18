@@ -1,10 +1,6 @@
 package com.example.testGlide;
 
 import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.ColorFilter;
-import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.text.Html;
 import android.util.DisplayMetrics;
@@ -29,7 +25,7 @@ public class URLImageParser implements Html.ImageGetter {
     }
 
     @Override
-    public Drawable getDrawable(String url) {
+    public Drawable getDrawable(final String url) {
         final UrlDrawable urlDrawable = new UrlDrawable();
         final String source = url;
 
@@ -38,8 +34,27 @@ public class URLImageParser implements Html.ImageGetter {
         ((WindowManager) container.getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(metrics);
         final float dpi = (int) metrics.density;
 
-        Glide.with(container.getContext()).load(source).diskCacheStrategy(DiskCacheStrategy.ALL).
-                listener(new RequestListener<String, GlideDrawable>() {
+        Drawable.Callback callback = new Drawable.Callback() {
+
+            @Override
+            public void invalidateDrawable(Drawable drawable) {
+                container.invalidate();
+            }
+
+            @Override
+            public void scheduleDrawable(Drawable drawable, Runnable runnable, long l) {
+            }
+
+            @Override
+            public void unscheduleDrawable(Drawable drawable, Runnable runnable) {
+
+            }
+        };
+        container.setTag(R.id.callback_id, callback);
+
+        Glide.with(container.getContext()).load(source)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .listener(new RequestListener<String, GlideDrawable>() {
                     @Override
                     public boolean onException(Exception e, String s, Target<GlideDrawable> glideDrawableTarget, boolean b) {
                         debug("Error in Glide listener");
@@ -62,26 +77,10 @@ public class URLImageParser implements Html.ImageGetter {
                         d.setBounds(0, 0, width, height);
                         d.setVisible(true, true);
 
-                        d.setCallback(new Drawable.Callback() {
-                            @Override
-                            public void invalidateDrawable(Drawable who) {
-
-                            }
-
-                            @Override
-                            public void scheduleDrawable(Drawable who, Runnable what, long when) {
-
-                            }
-
-                            @Override
-                            public void unscheduleDrawable(Drawable who, Runnable what) {
-
-                            }
-                        });
-
                         urlDrawable.setBounds(0, 0, width, height);
-                        urlDrawable.drawable = d;
-                        debug("Lisnt1er ended " + width + ", " + height + ", source: " + source + ", animated? " + d.isAnimated() + ", " + d.getClass().getSimpleName());
+                        urlDrawable.setDrawable(d);
+                        urlDrawable.setCallback((Drawable.Callback) container.getTag(R.id.callback_id));
+                        debug("Lisnter ended " + width + ", " + height + ", source: " + source + ", animated? " + d.isAnimated() + ", " + d.getClass().getSimpleName());
 
                         if (d instanceof GifDrawable) {
                             debug("Gif drawable ! animated? " + d.isAnimated() + ", " + (d.getCallback() == null));
